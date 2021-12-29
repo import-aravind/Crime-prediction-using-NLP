@@ -1,0 +1,151 @@
+---
+title: "tarp"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+data = read.csv("C:\\Users\\Surya\\Downloads\\TARP\\tarp table2 - Sheet1.csv")
+print(head(data,10))
+print(tail(data,10))
+```
+
+```{r}
+
+for (x in colnames(data[,4:19])){
+  data1 <- data[31:49,]
+  lmmodel<-lm(Assam~Year,data=data1)
+    year<-2021:2025
+    recidivism<-(year*lmmodel$coef[2])+lmmodel$coef[1]
+    df = data.frame(year,recidivism)
+    print(df)
+}
+  
+```
+For assam, the recidivism rate tends to decrease from the year 2021 to 2025.
+For Tamil nadu also, the rate is approaching negative meaning the recidivism rate may reduce. For the 2018 predicted rate, which is 4.53, from the data table it can be noticed that the data for 2017 is 4.7. hence it can be concluded that the data is 70% accurate that it grasps the negative slope of the data values.
+```{r}
+table = read.csv("C:\\Users\\Surya\\Downloads\\TARP\\tarp table1 - Sheet1.csv")
+print(head(table,15))
+```
+
+```{r}
+library(tidyr)
+library(dplyr)
+
+table1 <- table%>%
+  separate(Reported_time, c("Reported_time_hrs","Reported_time_min"),":")
+
+table1$Reported_time_hrs <- as.integer(table1$Reported_time_hrs)
+table1$Reported_time_min <- as.integer(table1$Reported_time_min)
+
+table1 <- table1%>%
+  unite("Time_reported",Reported_time_hrs,Reported_time_min,sep = ".")
+table1$Time_reported<-as.double(table1$Time_reported)
+```
+
+```{r}
+library(forecast)
+
+sensor<-ts(table1$Time_reported, frequency = 12)
+fit <- auto.arima(sensor)
+LH.pred<-predict(fit,n.ahead=24)
+plot(sensor,ylim=c(0,23),xlim=c(0,23),type="o", lwd="1")
+lines(LH.pred$pred,col="red",type="o",lwd="1")
+grid()
+```
+The time series for the reported time of the articles are noted and it is forecasted. It can be seen that for 24 uphead values, the time series is predicted to fall between approximately 11 am to 1 pm, meaning the more crime incidents could be reported during the noon.
+```{r}
+library(ggplot2)
+
+table2 <- table1[,-c(1,2,4,6,9)]
+table2 <- table2%>%
+  mutate(Criminal_gender = case_when(Criminal_gender=="f" ~ 0 , 
+                                     Criminal_gender=="m" ~ 1, 
+                                     Criminal_gender=="org"~2, 
+                                     Criminal_gender=="gang"~3, 
+                                     Criminal_gender=="minor"~4))
+table2 <- table2%>%
+  mutate(Type = case_when(Type=="murder"~1,
+                          Type=="rape"~2,
+                          Type=="fraud"~3,
+                          Type=="theft"~4,
+                          Type=="cyber crime"~5,
+                          Type=="harrassment"~6,
+                          Type=="kidnap"~7,
+                          Type=="assault"~8,
+                          Type=="drugs"~9,
+                          Type=="attack"~10,
+                          Type=="smuggle"~11,
+                          Type=="gangster"~12,
+                          Type=="extortion"~13,
+                          Type=="terrorism"~14,
+                          Type=="1+"~15))
+table2 <- table2%>%
+  mutate(Location = case_when(Location=="Andhra Pradesh"~1,Location=="Assam"~2,
+                              Location=="Bihar"~3,Location=="Chattisgarh"~4,
+                              Location=="Dadra&Nagar Haveli"~5, Location=="Goa"~6,
+                              Location=="Haryana"~7, Location=="Himachal pradesh"~8,
+                              Location=="Jammu&Kashmir"~9, Location=="Jharkand"~10,        Location=="Karnataka"~11, Location=="Kerala"~12, Location=="Madhya Pradesh"~13, Location=="Maharashtra"~14, Location=="New Delhi"~15, Location=="Odisha"~16, Location=="Punjab"~17, Location=="Rajasthan"~18, Location=="Tamil Nadu"~19, Location=="Telangana"~20, Location=="Uttar Pradesh"~21, Location=="West bengal"~22, Location=="Mumbai"~14.1))
+
+lmmodel1<-lm(Location~Time_reported,data=table2)
+  time<-c(2.30, 3.50, 12, 18.30)
+  loc<-(time*lmmodel1$coef[2])+lmmodel1$coef[1]
+  data.frame(time,loc)
+```
+Here, the analysis is done to predict the location given the time of a reported crime incident. Inorder to understand the above prediction mode, the data should be explained. The character values of the columns are factorized to binary value to compute and fit the logistic function. So, the values are categorized such as the gender is changed as: Male-0, Female-1, Organization-2, Gang-3, Minor-4. The locations in alphabetical order from Andhra pradesh to West bengal is numbered as 1 - 22 with Mumbai as subset 14.1. Similary the type of crime is numbered from 1-15 ranging from murder to 1+ crimes. Said that, the predicted value means for 2:30 am Location is predicted as 13.9 which can be approximated to 14 and 14 is numbered for "Maharashtra". In the same way, the predictions can be analyzed.
+```{r}
+table3<-table1
+table3 <- table3%>%
+  separate(Reported_date,c("Reported_Day","Reported_Month","Reported_Year"),sep=c(" ",","))
+table3 <- table3[,-c(1,2,4,5,6,9,11)]
+
+table3 <- table3%>%
+  mutate(Type = case_when(Type=="murder"~1,
+                          Type=="rape"~2,
+                          Type=="fraud"~3,
+                          Type=="theft"~4,
+                          Type=="cyber crime"~5,
+                          Type=="harrassment"~6,
+                          Type=="kidnap"~7,
+                          Type=="assault"~8,
+                          Type=="drugs"~9,
+                          Type=="attack"~10,
+                          Type=="smuggle"~11,
+                          Type=="gangster"~12,
+                          Type=="extortion"~13,
+                          Type=="terrorism"~14,
+                          Type=="1+"~15))
+table3 <- table3%>%
+  mutate(Location = case_when(Location=="Andhra Pradesh"~1,Location=="Assam"~2,
+                              Location=="Bihar"~3,Location=="Chattisgarh"~4,
+                              Location=="Dadra&Nagar Haveli"~5, Location=="Goa"~6,
+                              Location=="Haryana"~7, Location=="Himachal pradesh"~8,
+                              Location=="Jammu&Kashmir"~9, Location=="Jharkand"~10,        Location=="Karnataka"~11, Location=="Kerala"~12, Location=="Madhya Pradesh"~13, Location=="Maharashtra"~14, Location=="New Delhi"~15, Location=="Odisha"~16, Location=="Punjab"~17, Location=="Rajasthan"~18, Location=="Tamil Nadu"~19, Location=="Telangana"~20, Location=="Uttar Pradesh"~21, Location=="West bengal"~22, Location=="Mumbai"~14.1))
+
+table3 <- table3%>%
+  mutate(Reported_Month = case_when(Reported_Month=="Jan,"~1, Reported_Month=="Feb,"~2,
+                                    Reported_Month=="Mar,"~3, Reported_Month=="Apr,"~4,
+                                    Reported_Month=="May,"~5, Reported_Month=="June,"~6,
+                                    Reported_Month=="July,"~7, Reported_Month=="Aug,"~8,
+                                    Reported_Month=="Sep,"~9, Reported_Month=="Oct,"~10,
+                                    Reported_Month=="Nov,"~11, Reported_Month=="Dec,"~12))
+
+lmmodel2<-lm(Location~Type*Reported_Month,data=table3)
+  type <- c(1,9,2)
+  month <- c(3,7,5)
+  location <-(type*month*lmmodel2$coef[2])+lmmodel2$coef[1]
+  data.frame(type,month,location)
+
+```
+The analysis done above is to predict the location provided the type of the crime and the month of a year, here 2021. The understanding for this prediction is also same as the before. The character values of the column are converted to binary and can be interpreted as for the type of crime 9(drugs) and the month 7(July) the location is predicted to be a 4-"Chattisgarh".Similarly the other predictions can be analyzed.
+
+```{r}
+lmmodel3<-lm(Criminal_gender~Type*Location,data=table2)
+  type <- c(1,9,2,1,9,2,1,9,2)
+  location <- c(19,19,19,11,11,11,15,15,15)
+  gender<-(type*location*lmmodel3$coef[2])+lmmodel3$coef[1]
+  data.frame(type,location,gender)
+```
+The analysis done above is to predict the gender of the criminal provided the type of the crime and the location. Here, the prediction can be interpreted as, for the type of crim 2(Rape) and the location 11(Karnataka) the gender is predicted to be 0.79 which is more than 0.5 and can be categorized as "Male". The negative values for example -0.7 could represent that there is chance that the male(since ~1) in Karnataka cannot possibly attempt the crime 9(drugs). Similarly other predictions can be understood. 
